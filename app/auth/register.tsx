@@ -2,43 +2,27 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, Pressable } from 'react-native';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
 const Register = () => {
-  const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [token, setToken] = useState('');
+    const [isRegistering, setIsRegistering] = useState(false);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [tel, setTel] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const handleRegister = async () => {
-    setLoading(true);
-    console.log(name);
-    console.log(email);
-    console.log(tel);
-    console.log(password);
-
-    const response = await fetch("http://localhost:8000/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({
-        name,
+    const router = useRouter();
+    const handleRegister = async () => {
+      try {
+        const response = await axios.post('http://localhost:8000/api/register', {
+          name,
         email,
-        telephone: tel,
         password,
-      }),
-    });
-    const data = await response.json();
-    console.log(data);
-    if (response.ok) {
-      Alert.alert("Cadastro realizado com sucesso!");
-      router.push("/(tabs)/home");
-    } else {
-      Alert.alert("Erro ao cadastrar motorista:", data);
+      });
+      Alert.alert('Sucesso', 'Cadastro realizado com sucesso! Redirecionando para a home...');
+      setToken(response.data.access_token);
+      setIsRegistering(false);
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar');
     }
   };
 
@@ -75,18 +59,6 @@ const Register = () => {
               />
             </View>
 
-            <Text style={styles.label}>Telefone</Text>
-            <View style={styles.inputContainer}>
-              <FontAwesome name="phone" size={16} color="#888" style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="(99) 99999-9999"
-                placeholderTextColor={"#888"}
-                keyboardType="phone-pad"
-                onChangeText={(txt) => setTel(txt)} value={tel}
-              />
-            </View>
-
             <Text style={styles.label}>Senha</Text>
             <View style={styles.inputContainer}>
               <FontAwesome name="lock" size={16} color="#888" style={styles.icon} />
@@ -96,19 +68,14 @@ const Register = () => {
                 placeholderTextColor={"#888"}
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={!showPassword}
+                secureTextEntry
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <FontAwesome name={showPassword ? 'eye-slash' : 'eye'} size={16} color="#888" />
-              </TouchableOpacity>
             </View>
     
-            <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+              {isRegistering && <ActivityIndicator color="#fff" />}
+              {!isRegistering && <FontAwesome name="check" size={20} color="#fff" style={{ marginRight: 10 }} />}
                 <Text style={styles.buttonText}>Cadastrar</Text>
-              )}
             </TouchableOpacity>
           </View>
         </View>
